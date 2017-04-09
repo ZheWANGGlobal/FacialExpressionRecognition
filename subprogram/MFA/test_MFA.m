@@ -1,14 +1,15 @@
 clear
 % 表情识别
-load Jaffe;
-load Jaffe32_row;
+% load Jaffe;
+% load Jaffe32_row;
 % load YaleB32_row;
 % load YaleB_Y;
 % load AR32_row;
 % load AR32_row_Y;
 % load CK_Y;
 % load CK64_row;
-
+load CK32Row;
+load CKROW_Y;
 %Z=double(Z)./255;
 N1=20;%训练样本数
 global p1 knn
@@ -17,7 +18,8 @@ p1=2^-8;
 
 % n折交叉验证
 % [M,N]=size(X);%数据集为一个M*N的矩阵，其中每一行代表一个样本
- X = Jaffe32_row;
+ X = CK32Row;
+ Y=CKROW_Y;
 % X = AR32_row;
 % X = CK64_row;
 

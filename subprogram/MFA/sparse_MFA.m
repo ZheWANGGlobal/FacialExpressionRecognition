@@ -71,7 +71,7 @@ tq = size(U,2);
 V = zeros(d,tq); B = zeros(d,tq);    
 delta=.01; mu=0.5;    % delta mu 作为参数 对比迭代得到的V和PU相乘的V
 % delta=.01; mu=1;    % delta mu 作为参数 对比迭代得到的V和PU相乘的V
-epsilon=0.015;
+epsilon=0.2;
 %线性迭代算法
 k=1;
 ttemp(1) = norm(P'*V-U);
