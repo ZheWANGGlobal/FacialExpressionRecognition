@@ -1,0 +1,24 @@
+clc;
+clear;
+load iris_1.mat;
+k=3;
+testset=[randn(2*100,100);randn(2*100,2)+1.5];
+sampleset=[randn(100,2);randn(100,2)+2];;
+samplesign=[ones(100,1);2*ones(100,1)];
+testsign=samplesign;
+tic
+% [judge,r,gailv]=cknear(k,sampleset,samplesign,testset); %%函数输出可以取前两个或者第一个
+[judge,r,gailv]=cknear(k,sampleset,samplesign,sampleset); %%函数输出可以取前两个或者第一个
+toc
+% tic
+% judge1=knear(k,sampleset,samplesign,testset);
+% toc
+
+tic
+% [judge1]=nearest_neighbor(sampleset,samplesign,testset,k);
+[judge1]=nearest_neighbor(sampleset,samplesign,sampleset,k);
+toc
+diff=sum(judge1~=judge)
+% r
+% gailv
+

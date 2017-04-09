@@ -1,0 +1,4 @@
+1.函数SparseLocal_FDA实现SLFDA算法
+2.imageResize函数将原来213*64*64的数据集变成32*32*213的数据集
+3.JaffeThirtyTwo即为32*32*213的数据集
+4.SLFDA_test函数中使用JaffeThirtyTwo作为SLFDA算法参数

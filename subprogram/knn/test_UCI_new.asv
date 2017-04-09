@@ -1,0 +1,154 @@
+clear
+rand('state',sum(100*clock));
+randn('state',sum(100*clock));
+warning off
+UCIdata={'wdbc','wpbc','hepatiti','heart_c','iono','liver','sonar','vote','musk',...
+    'breast','pima','iris','wine','glass','soy','vehicle','segment'};
+%UCIdata={'iris','wine'}
+cloop=30;
+fold=3;
+for kkk=1:length(UCIdata)
+    datset=char(UCIdata(kkk));
+    load(['\mwork\data\' datset])  
+    n=size(X,2);
+      if n<10
+        dimset=[1:n-1]';
+    else
+        dimset=ceil(linspace(floor((n-1)/10),n-1,10))';
+      end
+    clear X Y
+    eps=[0:0.1:0.8]';
+    knn_num=[1:3:20]';        
+    err1=[];
+    err2=[];
+    err=[];
+    Num_classifer=100;    
+    for loop1=1:10    
+        load(['\mwork\data\ucidata\', datset,'_',num2str(loop1)])
+        [Y_trn]=changelabel(Y_trn);[Y_tst]=changelabel(Y_tst);
+        [x_trn,y_trn,x_tst,y_tst]=sample_crossover(X_trn,Y_trn,[10,1],index,loop,1);       
+        L=size(x_trn,1);
+        classnum=max(y_trn);
+        dim_index=randperm(n);
+        %ceil(n/Num_classifer);
+        for k3=1:length(knn_num)
+            knn=knn_num(k3);
+            for k2=1:length(dimset)
+                dim=dimset(k2);
+                %      select feature randomly
+                for i=1:Num_classifer
+                    dimindex=randperm(n);
+                    classifer(i).dim=dimindex(1:dim);
+                end
+                %    select end
+                for i=1:Num_classifer
+                    dimin=classifer(i).dim;
+                    [judge,r,gailv]=cknear(knn,x_trn(:,dimin),y_trn,x_trn(:,dimin));
+%                     [tempY,N]=nearest_neighbor(x_trn(:,dimin),y_trn,x_trn(:,dimin),knn);
+                    classifer(i).pro=gailv;
+                end
+                %%%%%%%%%%%%%%%This is for weight voting
+                a=opweight(classifer,y_trn,2,30);
+                tempY=combining(classifer1,'opweight',a);
+                err3(k3,k2,loop,1)=mean(tempY~=y_tst);                
+                for k1=1:length(eps)
+                     a=findweight(classifer,y_trn,e,1);
+                    tempY=combining(classifer1,'weight',a);
+                    err1(k3,k2,k1,loop,1)=mean(tempY~=y_tst);                    
+                    a=findweight(classifer,y_trn,eps(k1),2);
+                    tempY=combining(classifer1,'weight',a);
+                    err1(k3,k2,k1,loop,2)=mean(tempY~=y_tst);
+                    a=findweight(classifer,y_trn,eps(k1),3);                
+                   tempY=combining(classifer1,'weight',a);
+                    err1(k3,k2,k1,loop,3)=mean(tempY~=y_tst);                    
+                end % ----for eps
+                
+                for k1=1:length(eps)
+                    a=findweight(classifer,y_trn,eps(k1),1);
+                    for i=1:Num_classifer
+                        dimin=classifer(i).dim;
+%                         [tempY,N]=nearest_neighbor(x_trn(:,dimin),y_trn,x_tst(:,dimin),knn);
+                        [judge,r,gailv]=cknear(knn,x_trn(:,dimin),y_trn,x_tst(:,dimin));
+                        classifer1(i).pro=gailv;
+                    end
+                    tempY=combining(classifer1,'weight',a);
+                    err1(k3,k2,k1,loop)=mean(tempY~=y_tst);
+                end % ----for eps
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                Y1=combining(classifer1,'product');
+                Y2=combining(classifer1,'sum');
+%                 Y3=combining(classifer1,'max');
+%                 Y4=combining(classifer1,'min');
+                Y5=combining(classifer1,'vote');
+                %err(loop,:)=[ mean(Y1~=y_tst) mean(Y2~=y_tst) mean(Y3~=y_tst) mean(Y4~=y_tst) mean(Y5~=y_tst)];
+                err(k3,k2,loop,1)=mean(Y1~=y_tst);err(k3,k2,loop,2)=mean(Y2~=y_tst);
+%                 err(k3,k2,loop,3)=mean(Y3~=y_tst);err(k3,k2,loop,4)=mean(Y4~=y_tst);
+                err(k3,k2,loop,5)=mean(Y5~=y_tst);
+            end %  ----for dim k2
+%             [Y6,N]=nearest_neighbor(x_trn,y_trn,x_tst,knn);
+            [Y6,r]=cknear(knn,x_trn,y_trn,x_tst);
+            err2(k3,loop)=mean(Y6~=y_tst);
+            save(['result1_' datset],'err','err1','err2','dimset','knn_num','eps');
+            %save re_wine err err1 err2 dimset knn_num eps
+        end % ---for knn k3
+    end % ----for loop
+
+    retest2
+    OPP=[opt_knn opt_dim opt_eps];
+    err=[];
+    method={'product','sum','max','min','vote'};
+
+    for loop=1:cloop
+        % load \mwork\data\iono
+        [x_trn,y_trn,x_tst,y_tst,index]=sample_crossover(X,Y,[fold,1],index,loop,2);
+        n=size(x_trn,2);
+        L=size(x_trn,1);
+        classnum=max(y_trn);
+        dim_index=randperm(n);
+        knn=opt_knn(1);
+        [Y1,N]=nearest_neighbor(x_trn,y_trn,x_tst,knn);
+        err(loop,1)=mean(Y1~=y_tst);
+        for j=2:6
+            knn=opt_knn(j);
+            %len=opt_len(j);
+            dim=opt_dim(j);
+            for i=1:Num_classifer
+                dimindex=randperm(n);
+                classifer(i).dim=dimindex(1:dim);
+                dimin=classifer(i).dim;
+                tempx=x_trn(:,dimin);
+                tempy=y_trn;
+                [tempY,N]=nearest_neighbor(tempx,tempy,x_tst(:,dimin),knn);
+                classifer1(i).pro=N./knn;
+            end
+            Y1=combining(classifer1,method{j-1});
+            err(loop,j)=mean(Y1~=y_tst);
+        end
+        knn=opt_knn(7); dim=opt_dim(7);
+        for i=1:Num_classifer
+            dimindex=randperm(n);
+            classifer(i).dim=dimindex(1:dim);
+
+            dimin=classifer(i).dim;
+            tempx=x_trn(:,dimin);
+            tempy=y_trn;
+            [tempY,N]=nearest_neighbor(tempx,tempy,x_trn(:,dimin),knn);
+            classifer(i).pro=N./knn;
+        end
+        e=opt_eps(7);
+        a=findweight(classifer,y_trn,e);
+        for i=1:Num_classifer
+            dimin=classifer(i).dim;
+            [tempY,N]=nearest_neighbor(x_trn(:,dimin),y_trn,x_tst(:,dimin),knn);
+            classifer1(i).pro=N./knn;
+        end
+        Y1=combining(classifer1,'weight',a);
+        err(loop,7)=mean(Y1~=y_tst);
+        save(['result2_' datset],'err','OPP');
+        %save re_wine err err1 err2 dimset knn_num eps
+    end % ----for loop
+end%end kkk
+

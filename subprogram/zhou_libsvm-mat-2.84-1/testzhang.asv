@@ -1,0 +1,4 @@
+clear
+x=[rand(10,2);rand(10,2)+1];
+Weight=[1]
+model=libguest(x,y,ker,C,c,beq,Weight);

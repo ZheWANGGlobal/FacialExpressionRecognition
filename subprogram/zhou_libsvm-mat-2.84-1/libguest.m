@@ -1,0 +1,134 @@
+function model=libguest(x,y,ker,C,c,beq,Weight,Tol,ShrinkOn,ProbabilityOn,CrossValidationOn)
+%Solve support vector machine for classification by using lib svm software
+%usage:
+%model=libsvc(x,y,ker,Cp,Cn,c,delta,Tol,ShrinkOn,ProbabilityOn,CrossValidationOn);
+%model     --      A struct of learning results
+%x             --      Training examples or [index,Q]
+%y             --      label for the training examples
+%ker          --      kernel type
+%Cp           --      penalty factor for positive
+%Cn           --      penalty factor for nagtive
+%c             --       coefficients for linear item in obj function
+%beq         --       right value for equation constraint.
+%Tol          --      Terminating tolearnce
+
+%LibSVM training options:
+% svm_type : set type of SVM (default 0)
+%                 0 -- C-SVC
+%                 1 -- nu-SVC
+%                 2 -- one-class SVM
+%                 3 -- epsilon-SVR
+%                 4 -- nu-SVR
+%             -t kernel_type : set type of kernel function (default 2)
+%                 0 -- linear: u'*v
+%                 1 -- polynomial: (gamma*u'*v + coef0)^degree
+%                 2 -- radial basis function: exp(-gamma*|u-v|^2)
+%                 3 -- sigmoid: tanh(gamma*u'*v + coef0)
+%                 4 -- precomputed kernel which should be added by a index
+%                 column, for example, K=[[1:n]',K] is a n*(n+1) matrix.
+%             -d degree : set degree in kernel function (default 3)
+%             -g gamma : set gamma in kernel function (default 1/k)
+%             -r coef0 : set coef0 in kernel function (default 0)
+%             -c cost : set the parameter C of C-SVC, epsilon-SVR, and nu-SVR (default 1)
+%             -n nu : set the parameter nu of nu-SVC, one-class SVM, and nu-SVR (default 0.5)
+%             -p epsilon : set the epsilon in loss function of epsilon-SVR (default 0.1)
+%             -m cachesize : set cache memory size in MB (default 100)
+%             -e epsilon : set tolerance of termination criterion (default 0.001)
+%             -h shrinking: whether to use the shrinking heuristics, 0 or 1 (default 1)
+%             -b probability_estimates: whether to train a SVC or SVR model for probability estimates, 0 or 1 (default 0)
+%             -wi weight: set the parameter C of class i to weight*C, for C-SVC (default 1)
+%
+%             The k in the -g option means the number of attributes in the input data.
+%
+%             option -v randomly splits the data into n parts and calculates cross
+%             validation accuracy/mean squared error on them.
+if nargin<6 | nargin>11
+    help libguest
+else
+   
+    if nargin<11, CrossValidationOn=0;,end
+    if nargin<10, ProbabilityOn=0;,end
+    if nargin<9, ShrinkOn=0;,end
+    if nargin<8, Tol=1e-5;,end
+    if nargin<7, Weight=[];,end
+    global p1 p2 p3;
+    [numsam,dim]=size(x);
+    LibSVMTrainOptions=[];
+    LibSVMTrainOptions=[LibSVMTrainOptions,' -s 5 '];
+    switch lower(ker)
+        case 'linear'
+            LibSVMTrainOptions=[LibSVMTrainOptions,' -t 0 '];
+        case 'poly'
+            LibSVMTrainOptions=[LibSVMTrainOptions,' -t 1 -d ',num2str(p1),' ',' -g ',num2str(p2),' ',' -r ',num2str(p3),' '];
+        case 'rbf'
+            LibSVMTrainOptions=[LibSVMTrainOptions,' -t 2 -g ',num2str(p1),' '];
+        case 'sigmoid'
+            LibSVMTrainOptions=[LibSVMTrainOptions,' -t 3 -g ',num2str(p1),' ',' -r ',num2str(p2),' '];
+        case 'precomputed'
+            LibSVMTrainOptions=[LibSVMTrainOptions,' -t 4 '];
+        otherwise
+            LibSVMTrainOptions=[LibSVMTrainOptions,' -t 2 -g ',num2str(p1),' '];
+    end
+    LibSVMTrainOptions=[LibSVMTrainOptions,' -q ', num2str(beq),' '];
+    LibSVMTrainOptions=[LibSVMTrainOptions,' -c ', num2str(C),' '];
+    LibSVMTrainOptions=[LibSVMTrainOptions,' -m ', num2str(min(4*8*numsam*numsam/1e6,200)),' '];
+    LibSVMTrainOptions=[LibSVMTrainOptions,' -e ', num2str(Tol),' '];
+    LibSVMTrainOptions=[LibSVMTrainOptions,' -h ', num2str(ShrinkOn),' '];
+    LibSVMTrainOptions=[LibSVMTrainOptions,' -b ', num2str(ProbabilityOn),' '];
+    if CrossValidationOn
+        LibSVMTrainOptions=[LibSVMTrainOptions,' -v '];
+    end
+    if ~isempty(Weight)
+        for k=1:size(Weight,1);
+            LibSVMTrainOptions=[LibSVMTrainOptions,' -w',num2str(Weight(k,1)),' ', num2str(Weight(k,2)),' '];
+        end
+    end
+    
+     disp(LibSVMTrainOptions);
+    
+    Cp = C;
+    Cn = C;
+    if ~isempty(Weight)
+        if Weight(1,1)>0
+            Cp = Cp * Weight(1,2);
+            Cn = Cn * Weight(2,2);
+        else
+            Cp = Cp * Weight(2,2);
+            Cn = Cn * Weight(1,2);
+        end
+    end
+    alpha0 = zeros(size(y));
+    if beq >0
+        pindex = find(y>0);
+        if ceil(beq/Cp)>length(pindex)
+            error('The equation constraint is impossible to fulfilled');
+        end
+        numssv = fix(beq/Cp);        
+        alpha0(pindex([1:numssv],:),1) = Cp;
+        alpha0(pindex(numssv+1,1),1) = beq - Cp*numssv;
+    elseif beq<0
+        nindex = find(y<0);
+        if ceil((-beq)/Cn)>length(nindex)
+            error('The equation constraint is impossible to fulfilled');
+        end
+        numssv = fix((-beq)/Cn);
+        alpha0(nindex([1:numssv],:),1) = Cn;
+        alpha0(nindex(numssv+1,1),1) = -beq - Cp*numssv;
+    end
+    if abs(alpha0'*y-beq)>1e-8
+        error('Incorrect initlized alpha, need users intervent');
+    end
+        
+    y=[y,c,alpha0,y];
+    %Notice that  y(:,1)      :     desired  label
+    %                   y(:,2)      :     coefficients for linear item
+    %                   y(:,3)      :     intilizied  alpha
+    %                   y(:,4)      :     coefficients for equation  constraints,
+    %                   beq       :     right value for equation constraint
+    %                 
+    %   Label'*alpha0 must be beq.
+    model = svmtrain(y,x, LibSVMTrainOptions);     
+end
+
+
+

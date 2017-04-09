@@ -1,0 +1,5 @@
+function rowDataset = changeColDatasetToColDataset(ColDataset)
+[h,d] = size(ColDataset);
+rowDataset
+
+end
