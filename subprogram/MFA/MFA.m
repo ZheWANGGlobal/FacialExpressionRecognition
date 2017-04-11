@@ -1,4 +1,4 @@
-function [mapping,XX_trn,XX_tst] = MFA(X_trn,Y_trn,X_tst,dims)
+function [mapping,XX_trn,XX_tst] = MFA(X_trn,Y_trn,X_tst)
 % MPA Perform Marginal Fisher Analysis
 % Perform the Marginal Fisher Analysis on dataset X_trn to reduce it 
 % dimensionality no_dims,The number fo neighbors that si used by MFA is
@@ -53,13 +53,17 @@ Sb=Sb+eye(size(Sw,1))*1.e-8;
 
 % eigvalues(isnan(eigvalues))=0;
 
-[eigvalues1,ind]=sort(diag(eigvalues),'ascend');
+% [eigvalues1,ind]=sort(diag(eigvalues),'ascend');
 
-eigvalues=eigvalues1;
-eigvectors=eigvectors(:,ind);
-
-eigvectors=eigvectors(:,ind);
-eigvectors=eigvectors(:,ind(1:dims));
+% [shu,order]=sort(diag(eigvalues));
+% order = find(shu<0);
+% eigvalues=shu(order);
+% eigvectors=eigvectors(:,order);
+% eigvalues=eigvalues1;
+% eigvectors=eigvectors(:,ind);
+% 
+% eigvectors=eigvectors(:,ind);
+% eigvectors=eigvectors(:,ind(1:dims));
 mapping=eigvectors;
 %mapping=uint8(mapping);
 XX_trn=X_trn*mapping;
