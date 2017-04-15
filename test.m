@@ -13,11 +13,11 @@ ker='linear';
 ker='rbf';
 for loop=1:10
  [x_trn,y_trn,x_tst,y_tst,trainindex,testindex]=sample_random(X,Y,N1);
-%  [~,P]=pca(x_trn,size(x_trn,1));
-%  newx_trn=x_trn*P;
-%  newx_tst=x_tst*P;
-%   [out]=cknear(knn,newx_trn,y_trn,newx_tst); 
-%   mean(out==y_tst)
+ [~,P]=pca(x_trn,size(x_trn,1));
+ newx_trn=x_trn*P;
+ newx_tst=x_tst*P;
+  [out]=cknear(knn,newx_trn,y_trn,newx_tst); 
+  mean(out==y_tst)
  %% KNN
    [out]=cknear(knn,x_trn,y_trn,x_tst); 
   Acc(loop,1)=mean(out==y_tst);
