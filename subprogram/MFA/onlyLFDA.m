@@ -1,4 +1,4 @@
-function [newspace,Z]=LFDA(X,Y,r,metric,kNN)
+function [newspace,new_cls_data]=onlyLFDA(X,Y,r,metric,kNN)
 %
 % Local Fisher Discriminant Analysis for Supervised Dimensionality Reduction
 %
@@ -30,7 +30,8 @@ function [newspace,Z]=LFDA(X,Y,r,metric,kNN)
 if nargin<2
   error('Not enough input arguments.')
 end
-[d n]=size(X);
+[t n]=size(X);
+[c d]=size(X{1});
 
 if nargin<3
   r=d;
@@ -44,11 +45,12 @@ if nargin<5
   kNN=7;
 end
 
-tSb=zeros(d,d);
-tSw=zeros(d,d);
+tSb=0;
+tSw=0;
 
 for c=1:max(Y)
-  Xc=X(:,Y==c);
+  Xc=X{c};%(:,Y==c);
+  Xc=Xc';
   nc=size(Xc,2);
 
   % Define classwise affinity matrix
@@ -63,16 +65,52 @@ for c=1:max(Y)
   A(flag)=exp(-distance2(flag)./localscale(flag));
 
   Xc1=sum(Xc,2);
+  
   G=Xc*(repmat(sum(A,2),[1 d]).*Xc')-Xc*A*Xc';
   tSb=tSb+G/n+Xc*Xc'*(1-nc/n)+Xc1*Xc1'/n;
   tSw=tSw+G/nc;
 end
+% X_all=0;
+% [d n]=size(X{1});
+% for i=1:100
+%     X1=X{i};
+%     for j=1:d
+%        X_all=X1(j,:) + X_all;
+%     end;
+% end;
+X_all=0;
+for i=1:100
+    X_all=sum(X{i})+X_all;
+end;
 
-X1=sum(X,2);
-tSb=tSb-X1*X1'/n-tSw;
+tSb=tSb-X_all'*X_all/n-tSw;
+%X1=sum(X,2);
+%tSb=tSb-X1*X1'/n-tSw;
 
 tSb=(tSb+tSb')/2;
 tSw=(tSw+tSw')/2;
+
+% if r==d
+%   [eigvec,eigval_matrix]=eig(tSb,tSw);
+% else
+%   opts.disp = 0; 
+%   [eigvec,eigval_matrix]=eigs(tSb,tSw,r,'la',opts);
+% end
+% eigval=diag(eigval_matrix);
+% [sort_eigval,sort_eigval_index]=sort(eigval);
+% T0=eigvec(:,sort_eigval_index(end:-1:1));
+% 
+% switch metric %determine the metric in the embedding space
+%   case 'weighted'
+%    T=T0.*repmat(sqrt(sort_eigval(end:-1:1))',[d,1]);
+%   case 'orthonormalized'
+%    [T,dummy]=qr(T0,0);
+%   case 'plain'
+%    T=T0;
+% end
+% for i=1:100
+%     Z{i}=T'*X{i}';
+% end
 
 tSw=tSw+eye(size(tSw,1))*1.e-8;
 %Sw=reshape(Sw,10,10);
@@ -89,7 +127,10 @@ index=find(L>1.e-5);%找到大于某个数的该矩阵的下标
 L=L(index(end-r+1:end));
 newspace=V(:,index(end-r+1:end));%有意义的特征值所对应的特征向量
 
-Z=newspace'*X;
-
-% Z=T'*X;
-
+for i=1:length(X)
+    %for j=1:size(X,1)
+        %tempic=reshape(X(j,:),1,100);
+        %new_cls_data{i}=X_tst{i}*V;
+        new_cls_data{i}=X{i}*newspace;
+    %end;
+end;
