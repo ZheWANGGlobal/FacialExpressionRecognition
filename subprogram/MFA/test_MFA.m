@@ -43,17 +43,17 @@ for k=1:8                  %交叉验证k=10，10个包轮流作为测试集
    [out1]=cknear(knn,X_trn,y_trn,X_tst); 
   Acc(k,1)=mean(out1==y_tst);
     
-%  [eigenvectors_transMat,X_trn,X_tst]=sparse_MFA(x_trn,y_trn,x_tst); 
-%    [out1]=cknear(knn,X_trn,y_trn,X_tst); 
-%   Acc(k,1)=mean(out1==y_tst);
+ [eigenvectors_transMat,X_trn,X_tst]=sparse_MFA(x_trn,y_trn,x_tst); 
+   [out2]=cknear(knn,X_trn,y_trn,X_tst); 
+  Acc(k,2)=mean(out2==y_tst);
   
  [mapping,X_trn,X_tst] = MFA(x_trn_PCA,y_trn,x_tst_PCA);
- [out2]=cknear(knn,X_trn,y_trn,X_tst); 
- 
-  correct1{k} = (out1==y_tst);
- correct2{k} = (out2==y_tst);
+ [out3]=cknear(knn,X_trn,y_trn,X_tst); 
+%  
+%   correct1{k} = (out1==y_tst);
+%  correct2{k} = (out2==y_tst);
  %correct(:,k)=(out2==y_tst);
- Acc(k,2)=mean(out2==y_tst);
+ Acc(k,3)=mean(out3==y_tst);
 
  end
 
