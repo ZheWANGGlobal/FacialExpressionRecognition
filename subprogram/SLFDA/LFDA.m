@@ -1,4 +1,4 @@
-function [newspace,Z]=LFDA(X,Y,r,metric,kNN)
+function [newspace,Z]=LFDA(X,Y,r,kNN)
 %
 % Local Fisher Discriminant Analysis for Supervised Dimensionality Reduction
 %
@@ -37,11 +37,8 @@ if nargin<3
 end
 
 if nargin<4
-  metric='weighted';
-end
-
-if nargin<5
-  kNN=7;
+%   kNN=7;
+    kNN=1;
 end
 
 tSb=zeros(d,d);
@@ -74,22 +71,44 @@ tSb=tSb-X1*X1'/n-tSw;
 tSb=(tSb+tSb')/2;
 tSw=(tSw+tSw')/2;
 
-tSw=tSw+eye(size(tSw,1))*1.e-8;
-%Sw=reshape(Sw,10,10);
-%求最大特征值和特征向量
-%[V,L]=eig(inv(Sw)*Sb);
-S=inv(tSw)*tSb;
-S=(S+S')/2;
-[V, L] = eig(S);
-%V=V(:,condition);
+
+[V,L]=eig(tSb,tSw);
 [L,index]=sort(diag(L));%求以L为对角的对角矩阵
 V=V(:,index);
-index=find(L>1.e-5);%找到大于某个数的该矩阵的下标
+index=find(L>1.e-5);%找到大于0的该矩阵的下标
 
 L=L(index(end-r+1:end));
 newspace=V(:,index(end-r+1:end));%有意义的特征值所对应的特征向量
 
 Z=newspace'*X;
 
-% Z=T'*X;
+% % tSw=tSw+eye(size(tSw,1))*1.e-8;
+% % %Sw=reshape(Sw,10,10);
+% % %求最大特征值和特征向量
+% % %[V,L]=eig(inv(Sw)*Sb);
+% % S=inv(tSw)*tSb;
+% % S=(S+S')/2;
+% % [V, L] = eig(S);
+% % %V=V(:,condition);
+% % [L,index]=sort(diag(L));%求以L为对角的对角矩阵
+% % V=V(:,index);
+% % index=find(L>1.e-5);%找到大于0的该矩阵的下标
+% % % T0=eigvec(:,sort_eigval_index(end:-1:1));
+% % 
+% % L=L(index(end-r+1:end));
+% % newspace=V(:,index(end-r+1:end));%有意义的特征值所对应的特征向量
+% % % T0=eigvec(:,sort_eigval_index(end:-1:1));
+% % 
+% % Z=newspace'*X;
+
+% tSw=tSw+eye(size(tSw,1))*1.e-8;
+% %求最大特征值和特征向量
+% S=inv(tSw)*tSb;
+% S=(S+S')/2;
+% [V, L] = eig(S);
+
+
+
+
+
 

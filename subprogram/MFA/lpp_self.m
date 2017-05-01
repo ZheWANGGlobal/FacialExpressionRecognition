@@ -74,20 +74,20 @@ function [mappedX, mapping] = lpp_self(X, no_dims, k, sigma, eig_impl)
     LP = (LP + LP') / 2;
 
     % Perform eigenanalysis of generalized eigenproblem (as in LEM)
-%     if size(X, 1) > 200 && no_dims < (size(X, 1) / 2)
-%         if strcmp(eig_impl, 'JDQR')
-%             options.Disp = 0;
-%             options.LSolver = 'bicgstab';
-%             [eigvector, eigvalue] = jdqz(LP, DP, no_dims, 'SA', options);
-%         else
-%             options.disp = 0;
-%             options.issym = 1;
-%             options.isreal = 1;
-%             [eigvector, eigvalue] = eigs(LP, DP, no_dims, 'SA', options);
-%         end
-%     else
+    if size(X, 1) > 200 && no_dims < (size(X, 1) / 2)
+        if strcmp(eig_impl, 'JDQR')
+            options.Disp = 0;
+            options.LSolver = 'bicgstab';
+            [eigvector, eigvalue] = jdqz(LP, DP, no_dims, 'SA', options);
+        else
+            options.disp = 0;
+            options.issym = 1;
+            options.isreal = 1;
+            [eigvector, eigvalue] = eigs(LP, DP, no_dims, 'SA', options);
+        end
+    else
         [eigvector, eigvalue] = eig(LP, DP);
-%     end
+    end
     
     % Sort eigenvalues in descending order and get smallest eigenvectors
     [eigvalue, ind] = sort(diag(eigvalue), 'ascend');
@@ -95,6 +95,5 @@ function [mappedX, mapping] = lpp_self(X, no_dims, k, sigma, eig_impl)
     
     % Compute final linear basis and map data
     mappedX = X * eigvector;
-    mapping=eigvector;
-%     mapping.M = eigvector;
-%     mapping.mean = mean(X, 1);
+    mapping.M = eigvector;
+    mapping.mean = mean(X, 1);

@@ -1,4 +1,4 @@
-function [mapping,x_trn,x_tst] = sparse_MFA(X_trn,Y_trn,X_tst)
+function [mapping,x_trn,x_tst] = sparse_MFA(X_trn,Y_trn,X_tst,dims)
 % MPA Perform Marginal Fisher Analysis
 % Perform the Marginal Fisher Analysis on dataset X_trn to reduce it 
 % dimensionality no_dims,The number fo neighbors that si used by MFA is
@@ -59,10 +59,16 @@ P=P(:,index);
 
 Sw=(X_trn*P)'*(S1-F1)*(X_trn*P);  %(x_trn*PP)'*(S-F)*(x_trn*PP);
 Sb=(X_trn*P)'*(S2-F2)*(X_trn*P);
-% Sw=Sw+eye(size(Sw,1))*1.e-8;
-% Sb=Sb+eye(size(Sw,1))*1.e-8;
+Sw=Sw+eye(size(Sw,1))*1.e-8;
+Sb=Sb+eye(size(Sw,1))*1.e-8;
 
 [U,D]=eig(Sb,Sw);
+[D,index]=sort(diag(D));%求以L为对角的对角矩阵
+U=U(:,index);
+index=find(D>1.e-5);%找到大于0的该矩阵的下标
+
+D=D(index(end-dims+1:end));
+U=U(:,index(end-dims+1:end));%有意义的特征值所对应的特征向量
 
 %线性bregman迭代进行稀疏处理
 tq = size(U,2);
@@ -70,7 +76,7 @@ tq = size(U,2);
 [n,d]=size(X_trn);
 V = zeros(d,tq); B = zeros(d,tq);    
 delta=.01; mu=0.5;    % delta mu 作为参数 对比迭代得到的V和PU相乘的V
-% delta=.01; mu=1;    % delta mu 作为参数 对比迭代得到的V和PU相乘的V
+% delta=.01; mu=1; i   % delta mu 作为参数 对比迭代得到的V和PU相乘的V
 epsilon=0.2;
 %线性迭代算法
 k=1;
@@ -82,8 +88,6 @@ while ttemp(k)>=epsilon && k<10000 %循环判断 加上迭代次数
     V = delta*shrink(B,mu);
     ttemp(k) = norm(P'*V-U);   
 end
-
-save ttemp.mat ttemp
 
 
 x_trn=X_trn*V;

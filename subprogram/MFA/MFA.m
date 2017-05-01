@@ -47,9 +47,11 @@ S2=diag(sum(F2));
 Sw=X_trn'*(S1-F1)*X_trn;
 Sb=X_trn'*(S2-F2)*X_trn;
 Sw=Sw+eye(size(Sw,1))*1.e-8;
-Sb=Sb+eye(size(Sw,1))*1.e-8;
+Sb=Sb+eye(size(Sb,1))*1.e-8;
 
 [eigvectors,eigvalues]=eig(Sw,Sb);
+% index=find(diag(eigvalues)>1.e-5);     %加上之后准确度下降约10%
+% eigvectors=eigvectors(:,index);
 
 % eigvalues(isnan(eigvalues))=0;
 

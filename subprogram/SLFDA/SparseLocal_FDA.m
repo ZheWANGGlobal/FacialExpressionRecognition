@@ -19,7 +19,8 @@ XXX = double(XXX);
 [d,n]=size(XXX);
 
 if nargin<5
-   kNN=2;
+%    kNN=7;
+  kNN=1;
 end
 
 if nargin<4
@@ -61,49 +62,62 @@ tSb=(tSb+tSb')/2;
 tSw=(tSw+tSw')/2;
 
 %计算混合离散度矩阵tSt
-tSt = tSb+tSw;
+% tSt = tSb+tSw;
+% [P,~] = eig(tSt);
 
 Dlt = diag(sum(W));
 Llt = Dlt - W;
 [Qlt,Alpha]=eig(Llt);
 Hlt = XXX*Qlt*abs(Alpha^(1/2));
+[P,aaa,~]=svd(Hlt);  
+index=find(diag(aaa)>1.e-5);
+P=P(:,index);
 
 %进行奇异值分解
 % tHt = chol(tSt);    %R = chol(A) 满足R'*R = A.如果A不是正定，会报错
 % tHt = tHt';
-[P,~,~]=svd(Hlt);                                                                                      
+                                                                                    
 
 Sb = P'*tSb*P;
 Sw = P'*tSw*P;
+[U,D]=eig(Sb,Sw);
+[D,index]=sort(diag(D));%求以L为对角的对角矩阵
+U=U(:,index);
+index=find(D>1.e-5);%找到大于0的该矩阵的下标
 
-%解决广义特征值问题并获得矩阵U
-if r==d       %U=eigvec,D=eigval_matrix
-  [U,D]=eig(Sb,Sw); %广义特征向量矩阵U和广义特征值矩阵D,其对角线上的N个元素即为相应的广义特征值
-else    % 这段还是暂时不用,r使用默认值d
-  opts.disp = 0; 
-  [U,D]=eigs(Sb,Sw,r,'la',opts);
-end
+D=D(index(end-r+1:end));
+U=U(:,index(end-r+1:end));%有意义的特征值所对应的特征向量
 
+% %解决广义特征值问题并获得矩阵U
+% if r==d       %U=eigvec,D=eigval_matrix
+%   [U,D]=eig(Sb,Sw); %广义特征向量矩阵U和广义特征值矩阵D,其对角线上的N个元素即为相应的广义特征值
+% else    % 这段还是暂时不用,r使用默认值d
+%   opts.disp = 0; 
+%   [U,D]=eigs(Sb,Sw,r,'la',opts);
+% end
+% [U,D]=eig(Sb,Sw);
+% index=find(diag(D)>1.e-5);
+% U=U(:,index);
 
 %线性bregman迭代进行稀疏处理
 % V = P*U;
 tq = size(U,2);
 %初始化相关变量
+% [n,d]=size(XXX);
 V = zeros(d,tq); B = zeros(d,tq);                                                                                         
 delta=.01; mu=.5;    % delta mu 作为参数 对比迭代得到的V和PU相乘的V
 if nargin<6
     %epsilon=10^(-5);
-    epsilon=50;
+    epsilon=1;
 end
 %线性迭代算法
 k=1;
 ttemp(1) = norm(P'*V-U);
-while ttemp(k)>=epsilon %循环判断
+while ttemp(k)>=epsilon && k<=10000 %循环判断
     k=k+1;
     B = B - P*(P'*V-U);
     V = delta*shrink(B,mu);
     ttemp(k) = norm(P'*V-U);
 end
 
-Z=V'*XXX;
-X_tst = V'*x_tst;
+Z=V'*XXX;X_tst = V'*x_tst;

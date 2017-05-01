@@ -75,10 +75,10 @@ for k=1:10                   %交叉验证k=10，10个包轮流作为测试集
    [out1]=cknear(knn,X_trn,y_trn,X_tst); 
   Acc(k,1)=mean(out1==y_tst);
 %  [eigenvectorslast,eigvalues,X_trn,X_tst,d]=DNE(x_trn,x_tst,y_trn,1);
-    [V,X_trn]=LFDA(x_trn,y_trn);
-    X_tst=V'*x_tst;
-  [out2]=cknear(knn,X_trn,y_trn,X_tst); 
-  Acc(k,2)=mean(out2==y_tst);
+%     [V,X_trn]=LFDA(x_trn,y_trn);
+%     X_tst=V'*x_tst;
+%   [out2]=cknear(knn,X_trn,y_trn,X_tst); 
+%   Acc(k,2)=mean(out2==y_tst);
 
  end
 mean(Acc)
