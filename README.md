@@ -1,6 +1,6 @@
 # FacialExpressionRecognition
 Facial Expression Experiment Code
 
-#Licence
+# Licence
 The project is licensed under the MIT license.
 Copyright © 2017, Zhe Wang
